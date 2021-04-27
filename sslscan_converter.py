@@ -56,7 +56,22 @@ def find_host(path):
             return hostname
     
     return hostname
-    
+
+# Given a file path, it searches for the port of the host it's connected to and returns it as a string. If it can't identify the host, it will return a blank string
+def find_port(path):
+    port = ""
+    contents = purify(path)
+
+    index = contents.find("on port ")
+    if index < 0:
+        return ""
+    index += len("on port ")
+
+    for char in contents[index:]:
+        if char != " ":
+            port = port + char
+        else:
+            return port
 
 def is_ip(host):
     octets = host.split(".")
@@ -115,12 +130,16 @@ def sort_hosts(hosts):
 class Host:
     def __init__(self, path):
         self.path = path
-        # The ip here can be a hostname or IP address, it's a misnomer, it shouldn't really ever be a hostname though
+        # The ip here can be a hostname or IP address, it's a misnomer
         self.ip = find_host(self.path)
+        self.port = find_port(self.path)
         self.contents = purify(path)
 
     def get_ip(self):
         return self.ip
+
+    def get_port(self):
+        return self.port
 
     def supports_cbc(self):
         index_of_ciphers = self.contents.find("Supported Server Cipher(s):") + len("Supported Server Cipher(s):")
@@ -387,7 +406,7 @@ def main():
             if not not cipher:
                 weakness = True
         if weakness:
-            cipher_list.insert(0,host.get_ip())
+            cipher_list.insert(0, host.get_ip() + ":" + host.get_port())
             host_ciphers.append(cipher_list)
             host_index += 1
 
